@@ -12,6 +12,8 @@
   let constrainedPrefix = $state(24);
   let result = $state<DiffResult | null>(null);
   let copiedStates = $state<Record<string, boolean>>({});
+  let selectedExample = $state<string | null>(null);
+  let userModified = $state(false);
 
   const alignmentModes = [
     {
@@ -57,6 +59,8 @@
   function setExample(example: typeof examples[0]) {
     setA = example.setA;
     setB = example.setB;
+    selectedExample = example.label;
+    userModified = false;
     performDiff();
   }
 
@@ -158,6 +162,13 @@
     return `Set ${type}\nRange: ${startIP} - ${endIP}\nSize: ${size.toLocaleString()}${range.cidr ? `\nCIDR: ${range.cidr}` : ''}`;
   }
 
+  // Track user modifications
+  $effect(() => {
+    if (userModified) {
+      selectedExample = null;
+    }
+  });
+
   // Reactive computation
   $effect(() => {
     if (setA.trim()) {
@@ -203,6 +214,7 @@
           id="constrained-prefix"
           type="number"
           bind:value={constrainedPrefix}
+          oninput={() => userModified = true}
           min="8"
           max="30"
           class="input-field constraint-field"
@@ -225,6 +237,7 @@
         <div class="input-wrapper">
           <textarea
             bind:value={setA}
+            oninput={() => userModified = true}
             placeholder="192.168.1.0/24&#10;10.0.0.0-10.0.0.100"
             class="input-textarea set-a"
             rows="6"
@@ -243,6 +256,7 @@
         <div class="input-wrapper">
           <textarea
             bind:value={setB}
+            oninput={() => userModified = true}
             placeholder="192.168.1.128/25&#10;10.0.0.50-10.0.0.75"
             class="input-textarea set-b"
             rows="6"
@@ -256,9 +270,9 @@
         type="button" 
         class="btn btn-secondary btn-sm"
         onclick={clearInputs}
+        use:tooltip={{ text: 'Clear both input sets', position: 'top' }}
       >
         <Icon name="trash" size="sm" />
-        Clear All
       </button>
     </div>
 
@@ -270,6 +284,7 @@
           <button 
             type="button"
             class="example-btn"
+            class:selected={selectedExample === example.label}
             onclick={() => setExample(example)}
           >
             {example.label}
@@ -336,7 +351,7 @@
               <span class="stat-value">{result.stats.output.count} CIDRs</span>
               <span class="stat-detail">{result.stats.output.addresses} addresses</span>
             </div>
-            <div class="stat-card efficiency">
+            <div class="stat-card efficiency" data-efficiency={result.stats.efficiency >= 80 ? 'high' : result.stats.efficiency >= 50 ? 'medium' : 'low'}>
               <span class="stat-label">Efficiency</span>
               <span class="stat-value">{result.stats.efficiency}%</span>
               <span class="stat-detail">{result.stats.removed.addresses} removed</span>
@@ -495,6 +510,11 @@
         align-items: center;
         gap: var(--spacing-xs);
         
+        &.active {
+          outline: 2px solid var(--color-primary);
+          outline-offset: -2px;
+        }
+        
         :global(.tooltip-trigger) {
           opacity: 0.7;
           transition: opacity var(--transition-fast);
@@ -507,6 +527,18 @@
     .constraint-input {
       .constraint-field {
         width: 120px;
+        
+        /* Hide number input spinner */
+        &::-webkit-outer-spin-button,
+        &::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        
+        /* Firefox */
+        &[type=number] {
+          -moz-appearance: textfield;
+        }
       }
     }
   }
@@ -523,6 +555,7 @@
     }
     
     .input-group {
+      max-width: none;
       h3 {
         @extend %section-title;
         display: flex;
@@ -530,8 +563,9 @@
         gap: var(--spacing-xs);
         
         :global(.tooltip-trigger) {
+          color: var(--text-secondary);
           opacity: 0.7;
-          &:hover { opacity: 1; color: var(--color-info); }
+          &:hover { opacity: 1; }
         }
       }
     }
@@ -542,15 +576,12 @@
       font-family: var(--font-mono);
       font-size: var(--font-size-sm);
       resize: vertical;
-      
-      &.set-a { border-left: 4px solid var(--color-info); }
-      &.set-b { border-left: 4px solid var(--color-warning); }
+      border-left: 4px solid var(--color-primary);
     }
     
     .input-actions {
       display: flex;
-      justify-content: center;
-      margin-bottom: var(--spacing-lg);
+      justify-content: end;
     }
   }
 
@@ -573,6 +604,12 @@
       border-radius: var(--radius-sm);
       font-size: var(--font-size-sm);
       transition: all var(--transition-fast);
+      
+      &.selected {
+        outline: 2px solid var(--color-primary);
+        outline-offset: -2px;
+        background-color: var(--surface-hover);
+      }
       
       &:hover {
         background-color: var(--surface-hover);
@@ -623,10 +660,17 @@
     align-items: center;
     text-align: center;
     
-    &.input-a { border-left: 4px solid var(--color-info); }
-    &.input-b { border-left: 4px solid var(--color-warning); }
-    &.result { border-left: 4px solid var(--color-success); }
-    &.efficiency { border-left: 4px solid var(--color-primary); }
+    &.input-a { border-left: 4px solid var(--color-primary); }
+    &.input-b { border-left: 4px solid var(--color-primary); }
+    &.result { border-left: 4px solid var(--color-primary); }
+    &.efficiency { 
+      border-left: 4px solid var(--color-primary);
+      
+      /* Semantic colors based on efficiency */
+      &[data-efficiency="high"] { border-left-color: var(--color-success); }
+      &[data-efficiency="medium"] { border-left-color: var(--color-warning); }
+      &[data-efficiency="low"] { border-left-color: var(--color-error); }
+    }
   }
 
   .stat-label {
@@ -735,29 +779,18 @@
     @extend %bg-surface;
     border-radius: var(--radius-lg);
     overflow: hidden;
-    
-    &.ipv4 { border: 2px solid var(--color-info); }
-    &.ipv6 { border: 2px solid var(--color-success); }
-    
+    border: 2px solid var(--color-primary);
     .panel-header {
-      padding: var(--spacing-md);
+      padding: var(--spacing-sm);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      
+      background: var(--color-primary);
       h4 {
         margin: 0;
         color: var(--bg-primary);
         font-size: var(--font-size-md);
       }
-    }
-    
-    &.ipv4 .panel-header {
-      background: linear-gradient(135deg, var(--color-info), var(--color-info-light));
-    }
-    
-    &.ipv6 .panel-header {
-      background: linear-gradient(135deg, var(--color-success), var(--color-success-light));
     }
   }
 
@@ -766,6 +799,8 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
+    max-height: 600px;
+    overflow: auto;
   }
 
   .cidr-item {
