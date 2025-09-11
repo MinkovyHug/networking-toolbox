@@ -228,7 +228,7 @@
       <div class="action-section">
         <button class="check-btn lookup-btn" onclick={checkDMARC} disabled={loading || !domain.trim()}>
           {#if loading}
-            <Icon name="loader-2" size="sm" animate="spin" />
+            <Icon name="loader" size="sm" animate="spin" />
             Checking DMARC...
           {:else}
             <Icon name="shield-check" size="sm" />
@@ -243,10 +243,10 @@
   <!-- Results -->
   {#if results && results.hasRecord}
     <div class="card results-card">
-      <div class="card-header">
+      <div class="card-header row">
         <h3>DMARC Policy Analysis</h3>
         <button class="copy-btn" onclick={copyResults} disabled={copiedState}>
-          <Icon name={copiedState ? "check" : "copy"} size="xs" class={copiedState ? "text-green-500" : ""} />
+          <Icon name={copiedState ? "check" : "copy"} size="xs" />
           {copiedState ? "Copied!" : "Copy Results"}
         </button>
       </div>
@@ -401,7 +401,7 @@
             <div class="reporting-grid">
               <div class="reporting-item">
                 <div class="reporting-header">
-                  <Icon name="bar-chart-3" size="sm" />
+                  <Icon name="bar-chart" size="sm" />
                   <span>Aggregate Reports (RUA)</span>
                 </div>
                 <div class="reporting-value">
@@ -539,6 +539,23 @@
 </div>
 
 <style lang="scss">
+  .record-display {
+    display: flex;
+    // flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm);
+    @media (max-width: 600px) {
+      flex-wrap: wrap;
+    }
+    code {
+      display: block;
+      word-break: break-all;
+    }
+  }
+
   .none-found {
     margin: var(--spacing-md) 0 var(--spacing-lg);
   }
@@ -645,7 +662,7 @@
 
   .reporting-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
     gap: var(--spacing-md);
   }
 
@@ -654,29 +671,30 @@
     border-radius: var(--radius-md);
     border: 1px solid var(--border-color);
     padding: var(--spacing-md);
-  }
-
-  .reporting-header {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-sm);
-    color: var(--text-secondary);
-    font-size: var(--font-size-xs);
-    font-weight: 500;
-  }
-
-  .reporting-value {
-    .email-address {
-      font-family: var(--font-mono);
-      color: var(--text-primary);
-      font-size: var(--font-size-sm);
+    .reporting-header {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      margin-bottom: var(--spacing-sm);
+      color: var(--text-secondary);
+      font-size: var(--font-size-xs);
+      font-weight: 500;
     }
 
-    .not-configured {
-      color: var(--text-secondary);
-      font-style: italic;
-      font-size: var(--font-size-sm);
+    .reporting-value {
+      display: block;
+      word-break: break-all;
+      .email-address {
+        font-family: var(--font-mono);
+        color: var(--text-primary);
+        font-size: var(--font-size-sm);
+      }
+
+      .not-configured {
+        color: var(--text-secondary);
+        font-style: italic;
+        font-size: var(--font-size-sm);
+      }
     }
   }
 
@@ -686,29 +704,6 @@
     gap: var(--spacing-sm);
   }
 
-  .issue-item {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-md);
-    border-radius: var(--radius-md);
-    border-left: 4px solid;
-
-    &.success {
-      background: var(--bg-success);
-      border-color: var(--color-success);
-    }
-
-    &.warning {
-      background: var(--bg-warning);
-      border-color: var(--color-warning);
-    }
-
-    &.error {
-      background: var(--bg-error);
-      border-color: var(--color-error);
-    }
-  }
 
   .issue-content {
     display: flex;
