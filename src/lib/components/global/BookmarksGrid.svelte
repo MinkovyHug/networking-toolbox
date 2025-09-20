@@ -22,18 +22,17 @@
 
 {#if $bookmarks.length > 0}
   <div class="bookmarks-container" aria-live="polite">
-    {#if !hideOther}
-      <div class="bookmarks-header">
-        <div class="header-content">
-          <Icon name="bookmarks" size="sm" />
-          <h2>Bookmarked Tools</h2>
-          <span class="count">{$bookmarks.length}</span>
-        </div>
+
+    <div class="bookmarks-header">
+      <div class="tools-grid-sub-header">
+        <Icon name="bookmarks" size="sm" />
+        <h2>Bookmarked Tools</h2>
+        <span class="count">{$bookmarks.length}</span>
       </div>
-    {/if}
+    </div>
 
     <div class="bookmarks-grid">
-      <ToolsGrid {tools} />
+      <ToolsGrid {tools} idPrefix="bookmarks" />
     </div>
   </div>
 {:else if !hideOther}
@@ -49,44 +48,6 @@
 <style lang="scss">
   .bookmarks-container {
     animation: slideIn 0.3s ease-out;
-  }
-
-  .bookmarks-header {
-    margin-bottom: var(--spacing-lg);
-    width: fit-content;
-    .header-content {
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-sm);
-      :global(svg) {
-        color: var(--color-primary);
-      }
-      h2 {
-        font-size: var(--font-size-xl);
-        font-weight: 600;
-        color: var(--text-primary);
-        margin: 0;
-      }
-
-      .count {
-        background: var(--text-secondary);
-        opacity: 0.8;
-        color: var(--bg-primary);
-        padding: var(--spacing-2xs) var(--spacing-xs);
-        border-radius: var(--radius-sm);
-        font-size: var(--font-size-sm);
-        font-weight: 600;
-        min-width: 1.25rem;
-        text-align: center;
-        animation: pulse 0.5s ease;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        cursor: default;
-        &:hover {
-          transform: scale(1.1);
-          box-shadow: 0 4px 8px color-mix(in srgb, var(--color-warning), transparent 70%);
-        }
-      }
-    }
   }
 
   .bookmarks-grid {
